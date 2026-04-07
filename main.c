@@ -1,28 +1,14 @@
 #include "codexion.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 
-int parsing_args(int argc, char *argv[]) {
-    printf("Nombre d args: %d\n", argc);
+pthread_mutex_t mutex;
 
-    if (argc != 8) {
-        printf("Usage: %s <number_of_coders> <time_to_burnout>", argv[0]);
-        printf("<time_to_compile> <time_to_debug> ");
-        printf("<time_to_refactor> <number_of_compiles_required>");
-        printf("<dongle_cooldown>\n");
-        return 1;
-    }
-
-    printf("number_of_coders: %d\n", atoi(argv[1]));
-    printf("time_to_burnout: %d\n", atoi(argv[2]));
-    printf("time_to_compile: %d\n", atoi(argv[3]));
-    printf("time_to_debug: %d\n", atoi(argv[4]));
-    printf("time_to_refactor: %d\n", atoi(argv[5]));
-    printf("number_of_compiles_required: %d\n", atoi(argv[6]));
-    printf("dongle_cooldown: %d\n", atoi(argv[7]));
-    return 0;
+int get_time_in_ms(){
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
 }
+
 /*
 number_of_coders
 time_to_burnout
@@ -32,29 +18,46 @@ time_to_refactor
 number_of_compiles_required
 dongle_cooldown scheduler
 */
-void *thread_print_five(void *arg)
+
+void  print_state(t_simulation* sim, t_coder* coder, char* message)
 {
-    for (int i = 0; i < 5; i++) {
-        printf("Thread: %s\n", (char*)arg);
+    pthread_mutex_lock(&sim->print_mutex);
+    printf("%ld : Coder %d %s\n", get_time_in_ms(), &coder->id, message);
+    pthread_mutex_unlock(&sim->print_mutex);
+    return;
+}
+
+int main(int argc, char *argv[])
+{
+    int *args;
+    t_simulation sim;
+    t_coder coder_one;
+    t_coder coder_two;
+    t_dongle dongle_one;
+    args = parsing_args(argc, argv);
+    if (argc == 8 && args != NULL)
+    {
+        sim = init_sim(argc, args);
+        coder_one = init_coders(&sim)[0];
+        coder_two = init_coders(&sim)[1];
+        dongle_one = init_dongles(&sim)[0];
+        printf("%d\n", sim.number_of_coders);
+        printf("%ld\n", sim.time_to_burnout);
+        printf("CODER ID: %d\n", coder_one.id);
+        printf("CODER COMPILE COUNT: %d\n", coder_one.compile_count);
+        printf("CODER LAST COMPILE: %ld\n", coder_one.last_compile);
+        printf("CODER ID: %d\n", coder_two.id);
+        printf("CODER COMPILE COUNT: %d\n", coder_two.compile_count);
+        printf("CODER LAST COMPILE: %ld\n", coder_two.last_compile);
+        printf("LAST UDSED DONGLE: %ld\n", dongle_one.last_used);
+        printf("TIME TO COMPILE: %d\n", get_time_in_ms());
     }
-    return NULL;
-}
-
-void *thread_test(void *arg) {
-    pthread_t thread1, thread2;
-
-    pthread_create(&thread1, NULL, thread_print_five, "Thread 1");
-    pthread_create(&thread2, NULL, thread_print_five, "Thread 2");
-
-    pthread_join(thread1, NULL);
-    pthread_join(thread2, NULL);
-    return NULL;
-}
-
-
-int main(int argc, char *argv[]) {
-    printf("Hello, World!\n");
-    parsing_args(argc, argv);
-    thread_test(NULL);
+    else
+    {
+        printf("Failed to parse args.\n");
+        return 1;
+    }
+    // thread_test(NULL);
     return 0;
+    
 }

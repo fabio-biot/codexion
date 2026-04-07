@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 
 typedef struct s_dongle
@@ -39,7 +40,6 @@ typedef struct s_simulation
     long time_to_refactor;
     int number_of_compiles_required;
     long dongle_cooldown;
-
     int stop;
 
     t_dongle *dongles;
@@ -48,5 +48,14 @@ typedef struct s_simulation
     pthread_mutex_t print_mutex;
     pthread_mutex_t stop_mutex;
 } t_simulation;
+
+t_simulation init_sim(int argc, int* args);
+int *parsing_args(int argc, char *argv[]);
+void *thread_test(void *arg);
+t_coder *init_coders(t_simulation *sim);
+t_dongle *init_dongles(t_simulation *sim);
+void *thread_print_five(void *arg);
+void *thread_print_five_sec(void *arg);
+
 
 #endif
