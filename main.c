@@ -22,7 +22,7 @@ dongle_cooldown scheduler
 void  print_state(t_simulation* sim, t_coder* coder, char* message)
 {
     pthread_mutex_lock(&sim->print_mutex);
-    printf("%ld : Coder %d %s\n", get_time_in_ms(), &coder->id, message);
+    printf("%d : Coder %d %s\n", get_time_in_ms(), coder->id, message);
     pthread_mutex_unlock(&sim->print_mutex);
     return;
 }
@@ -51,6 +51,24 @@ int main(int argc, char *argv[])
         printf("CODER LAST COMPILE: %ld\n", coder_two.last_compile);
         printf("LAST UDSED DONGLE: %ld\n", dongle_one.last_used);
         printf("TIME TO COMPILE: %d\n", get_time_in_ms());
+        printf("\n\n\n\n");
+
+        print_state(&sim, &coder_one, "is compiling.");
+        usleep(sim.time_to_compile * 1000);
+        print_state(&sim, &coder_one, "is refactoring.");
+        usleep(sim.time_to_compile * 1000);
+        print_state(&sim, &coder_one, "is debuging.");
+
+
+
+
+
+
+
+
+
+
+
     }
     else
     {
