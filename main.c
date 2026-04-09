@@ -25,7 +25,6 @@ void *coder_routine(void *arg)
 
     while (1)
     {
-        // stop check
         pthread_mutex_lock(&sim->stop_mutex);
         if (sim->stop)
         {
@@ -33,8 +32,6 @@ void *coder_routine(void *arg)
             break;
         }
         pthread_mutex_unlock(&sim->stop_mutex);
-
-        // prise des dongles (anti-deadlock pair/impair)
         if (coder->id % 2 == 0)
         {
             pthread_mutex_lock(&coder->right->mutex);
@@ -52,20 +49,16 @@ void *coder_routine(void *arg)
             print_state(sim, coder, "has taken a dongle", sim->start_time);
         }
 
-        // compile
         coder->last_compile = get_time_in_ms();
         print_state(sim, coder, "is compiling", sim->start_time);
         usleep(sim->time_to_compile * 1000);
 
-        // release (ordre inverse)
         pthread_mutex_unlock(&coder->right->mutex);
         pthread_mutex_unlock(&coder->left->mutex);
 
-        // debug
         print_state(sim, coder, "is debugging", sim->start_time);
         usleep(sim->time_to_debug * 1000);
 
-        // refactor
         print_state(sim, coder, "is refactoring", sim->start_time);
         usleep(sim->time_to_refactor * 1000);
 
@@ -77,9 +70,11 @@ void *coder_routine(void *arg)
 int main(int argc, char *argv[])
 {
     int *args;
+    int i;
     t_simulation *sim;
 
     args = parsing_args(argc, argv);
+    i = 0;
     if (argc != 8 || !args)
     {
         printf("Failed to parse args.\n");
@@ -90,20 +85,19 @@ int main(int argc, char *argv[])
     sim->start_time = get_time_in_ms();
     sim->stop = 0;
 
-    // création threads
-    for (int i = 0; i < sim->number_of_coders; i++)
+    while (i < sim->number_of_coders)
     {
         pthread_create(&sim->coders[i].thread,
                        NULL,
                        coder_routine,
                        &sim->coders[i]);
+        i++;
     }
-
-    // join
-    for (int i = 0; i < sim->   number_of_coders; i++)
+    i = 0;
+    while (i < sim->number_of_coders)
     {
         pthread_join(sim->coders[i].thread, NULL);
+        i++;
     }
-
     return (0);
 }

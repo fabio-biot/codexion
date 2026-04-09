@@ -52,7 +52,6 @@ t_simulation *init_sim(int argc, int *args)
     pthread_mutex_init(&sim->print_mutex, NULL);
     pthread_mutex_init(&sim->stop_mutex, NULL);
 
-    // 🔥 IMPORTANT : ordre
     sim->dongles = init_dongles(sim);
     sim->coders = init_coders(sim);
 
