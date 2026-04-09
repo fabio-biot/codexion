@@ -30,52 +30,74 @@ int *parsing_args(int argc, char *argv[]) {
     return args;
 }
 
-t_simulation init_sim(int argc, int* args) {
-    t_simulation sim;
+t_simulation *init_sim(int argc, int *args)
+{
+    t_simulation *sim;
 
-    sim.number_of_coders = args[0];
-    sim.time_to_burnout = args[1];
-    sim.time_to_compile = args[2];
-    sim.time_to_debug = args[3];
-    sim.time_to_refactor = args[4];
-    sim.number_of_compiles_required = args[5];
-    sim.dongle_cooldown = args[6];
-    sim.coders = init_coders(&sim);
-    sim.dongles = init_dongles(&sim);
-    pthread_mutex_init(&sim.print_mutex, NULL);
-    pthread_mutex_init(&sim.stop_mutex, NULL);
+    sim = malloc(sizeof(t_simulation));
+    if (!sim)
+        return NULL;
+
+    sim->number_of_coders = args[0];
+    sim->time_to_burnout = args[1];
+    sim->time_to_compile = args[2];
+    sim->time_to_debug = args[3];
+    sim->time_to_refactor = args[4];
+    sim->number_of_compiles_required = args[5];
+    sim->dongle_cooldown = args[6];
+
+    sim->stop = 0;
+    sim->start_time = get_time_in_ms();
+
+    pthread_mutex_init(&sim->print_mutex, NULL);
+    pthread_mutex_init(&sim->stop_mutex, NULL);
+
+    // 🔥 IMPORTANT : ordre
+    sim->dongles = init_dongles(sim);
+    sim->coders = init_coders(sim);
 
     return sim;
 }
 
-t_coder *init_coders(t_simulation *sim) {
+t_coder *init_coders(t_simulation *sim)
+{
     t_coder *coders;
     int i;
 
     coders = malloc(sizeof(t_coder) * sim->number_of_coders);
+    if (!coders)
+        return NULL;
+
     i = 0;
-    while (i < sim->number_of_coders) {
+    while (i < sim->number_of_coders)
+    {
         coders[i].id = i + 1;
         coders[i].compile_count = 0;
-        coders[i].last_compile = 0;
-        coders[i].left = NULL;
-        coders[i].right = NULL;
+        coders[i].last_compile = sim->start_time;
         coders[i].sim = sim;
+        coders[i].left = &sim->dongles[i];
+        coders[i].right = &sim->dongles[(i + 1) % sim->number_of_coders];
+
         i++;
     }
     return coders;
 }
 
-t_dongle *init_dongles(t_simulation *sim) {
+t_dongle *init_dongles(t_simulation *sim)
+{
     t_dongle *dongles;
     int i;
 
     dongles = malloc(sizeof(t_dongle) * sim->number_of_coders);
+    if (!dongles)
+        return NULL;
+
     i = 0;
-    while (i < sim->number_of_coders) {
+    while (i < sim->number_of_coders)
+    {
         pthread_mutex_init(&dongles[i].mutex, NULL);
         dongles[i].last_used = 0;
-        i++;        
+        i++;
     }
     return dongles;
 }
@@ -83,18 +105,18 @@ t_dongle *init_dongles(t_simulation *sim) {
 // int main(int argc, char *argv[])
 // {
 //     int *args;
-//     t_simulation sim;
+//     t_simulation *sim;
+
 //     args = parsing_args(argc, argv);
-//     if (argc == 8 && args != NULL)
-//     {
-//         sim = init_sim(argc, args);
-//         printf("%d\n", sim.number_of_coders);
-//         printf("%ld\n", sim.time_to_burnout);
-//     }
-//     else
-//     {
-//         printf("Failed to parse args.\n");
-//         return 1;
-//     }
+//     if (!args)
+//         return (1);
+
+//     sim = init_sim(argc, args);
+//     if (!sim)
+//         return (1);
+
+//     printf("Coders: %d\n", sim->number_of_coders);
+//     printf("Burnout: %ld\n", sim->time_to_burnout);
+
 //     return 0;
 // }

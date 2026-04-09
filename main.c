@@ -3,79 +3,107 @@
 
 pthread_mutex_t mutex;
 
-int get_time_in_ms(){
+long get_time_in_ms(void)
+{
     struct timeval tv;
+
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000) + (tv.tv_usec / 1000);
+    return (tv.tv_sec * 1000L + tv.tv_usec / 1000L);
 }
 
-/*
-number_of_coders
-time_to_burnout
-time_to_compile
-time_to_debug
-time_to_refactor
-number_of_compiles_required
-dongle_cooldown scheduler
-*/
-
-void  print_state(t_simulation* sim, t_coder* coder, char* message)
+void print_state(t_simulation *sim, t_coder *coder, char *msg, long start)
 {
     pthread_mutex_lock(&sim->print_mutex);
-    printf("%d : Coder %d %s\n", get_time_in_ms(), coder->id, message);
+    printf("%ld %d %s\n", get_time_in_ms() - start, coder->id, msg);
     pthread_mutex_unlock(&sim->print_mutex);
-    return;
+}
+
+void *coder_routine(void *arg)
+{
+    t_coder *coder = (t_coder *)arg;
+    t_simulation *sim = coder->sim;
+
+    while (1)
+    {
+        // stop check
+        pthread_mutex_lock(&sim->stop_mutex);
+        if (sim->stop)
+        {
+            pthread_mutex_unlock(&sim->stop_mutex);
+            break;
+        }
+        pthread_mutex_unlock(&sim->stop_mutex);
+
+        // prise des dongles (anti-deadlock pair/impair)
+        if (coder->id % 2 == 0)
+        {
+            pthread_mutex_lock(&coder->right->mutex);
+            print_state(sim, coder, "has taken a dongle", sim->start_time);
+
+            pthread_mutex_lock(&coder->left->mutex);
+            print_state(sim, coder, "has taken a dongle", sim->start_time);
+        }
+        else
+        {
+            pthread_mutex_lock(&coder->left->mutex);
+            print_state(sim, coder, "has taken a dongle", sim->start_time);
+
+            pthread_mutex_lock(&coder->right->mutex);
+            print_state(sim, coder, "has taken a dongle", sim->start_time);
+        }
+
+        // compile
+        coder->last_compile = get_time_in_ms();
+        print_state(sim, coder, "is compiling", sim->start_time);
+        usleep(sim->time_to_compile * 1000);
+
+        // release (ordre inverse)
+        pthread_mutex_unlock(&coder->right->mutex);
+        pthread_mutex_unlock(&coder->left->mutex);
+
+        // debug
+        print_state(sim, coder, "is debugging", sim->start_time);
+        usleep(sim->time_to_debug * 1000);
+
+        // refactor
+        print_state(sim, coder, "is refactoring", sim->start_time);
+        usleep(sim->time_to_refactor * 1000);
+
+        coder->compile_count++;
+    }
+    return NULL;
 }
 
 int main(int argc, char *argv[])
 {
     int *args;
-    t_simulation sim;
-    t_coder coder_one;
-    t_coder coder_two;
-    t_dongle dongle_one;
+    t_simulation *sim;
+
     args = parsing_args(argc, argv);
-    if (argc == 8 && args != NULL)
-    {
-        sim = init_sim(argc, args);
-        coder_one = init_coders(&sim)[0];
-        coder_two = init_coders(&sim)[1];
-        dongle_one = init_dongles(&sim)[0];
-        printf("%d\n", sim.number_of_coders);
-        printf("%ld\n", sim.time_to_burnout);
-        printf("CODER ID: %d\n", coder_one.id);
-        printf("CODER COMPILE COUNT: %d\n", coder_one.compile_count);
-        printf("CODER LAST COMPILE: %ld\n", coder_one.last_compile);
-        printf("CODER ID: %d\n", coder_two.id);
-        printf("CODER COMPILE COUNT: %d\n", coder_two.compile_count);
-        printf("CODER LAST COMPILE: %ld\n", coder_two.last_compile);
-        printf("LAST UDSED DONGLE: %ld\n", dongle_one.last_used);
-        printf("TIME TO COMPILE: %d\n", get_time_in_ms());
-        printf("\n\n\n\n");
-
-        print_state(&sim, &coder_one, "is compiling.");
-        usleep(sim.time_to_compile * 1000);
-        print_state(&sim, &coder_one, "is refactoring.");
-        usleep(sim.time_to_compile * 1000);
-        print_state(&sim, &coder_one, "is debuging.");
-
-
-
-
-
-
-
-
-
-
-
-    }
-    else
+    if (argc != 8 || !args)
     {
         printf("Failed to parse args.\n");
-        return 1;
+        return (1);
     }
-    // thread_test(NULL);
-    return 0;
-    
+
+    sim = init_sim(argc, args);
+    sim->start_time = get_time_in_ms();
+    sim->stop = 0;
+
+    // création threads
+    for (int i = 0; i < sim->number_of_coders; i++)
+    {
+        pthread_create(&sim->coders[i].thread,
+                       NULL,
+                       coder_routine,
+                       &sim->coders[i]);
+    }
+
+    // join
+    for (int i = 0; i < sim->   number_of_coders; i++)
+    {
+        pthread_join(sim->coders[i].thread, NULL);
+    }
+
+    return (0);
 }

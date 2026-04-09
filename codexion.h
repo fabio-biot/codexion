@@ -41,6 +41,7 @@ typedef struct s_simulation
     int number_of_compiles_required;
     long dongle_cooldown;
     int stop;
+    long start_time;
 
     t_dongle *dongles;
     t_coder *coders;
@@ -49,13 +50,16 @@ typedef struct s_simulation
     pthread_mutex_t stop_mutex;
 } t_simulation;
 
-t_simulation init_sim(int argc, int* args);
+t_simulation *init_sim(int argc, int* args);
 int *parsing_args(int argc, char *argv[]);
 void *thread_test(void *arg);
 t_coder *init_coders(t_simulation *sim);
 t_dongle *init_dongles(t_simulation *sim);
 void *thread_print_five(void *arg);
 void *thread_print_five_sec(void *arg);
+long get_time_in_ms();
+void print_state(t_simulation *sim, t_coder *coder, char *state, long start_time);
+
 
 
 #endif
