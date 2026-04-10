@@ -14,6 +14,7 @@ typedef struct s_dongle
 {
     pthread_mutex_t mutex;
     long last_used;
+    long available_at;
 } t_dongle;
 
 typedef struct s_coder
@@ -23,6 +24,7 @@ typedef struct s_coder
     long last_compile;
 
     pthread_t thread;
+    pthread_mutex_t lock;
 
     t_dongle *left;
     t_dongle *right;
@@ -46,11 +48,12 @@ typedef struct s_simulation
     t_dongle *dongles;
     t_coder *coders;
 
+    pthread_t thread_monitor;
     pthread_mutex_t print_mutex;
     pthread_mutex_t stop_mutex;
 } t_simulation;
 
-t_simulation *init_sim(int argc, int* args);
+t_simulation *init_sim(int* args);
 int *parsing_args(int argc, char *argv[]);
 void *thread_test(void *arg);
 t_coder *init_coders(t_simulation *sim);
@@ -58,8 +61,9 @@ t_dongle *init_dongles(t_simulation *sim);
 void *thread_print_five(void *arg);
 void *thread_print_five_sec(void *arg);
 long get_time_in_ms();
+int is_number(char *str);
 void print_state(t_simulation *sim, t_coder *coder, char *state, long start_time);
-
+void *monitor_thread(void *arg);
 
 
 #endif

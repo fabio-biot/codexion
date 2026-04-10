@@ -16,6 +16,22 @@ int *parsing_args(int argc, char *argv[]) {
         return NULL;
     }
 
+    while (i < argc)
+    {
+        if (!is_number(argv[i]) && i > 0 && i < 8)
+        {
+            printf("Argument %d should be an int\n", i);
+            return (NULL);
+        }
+        i++;
+        if (is_number(argv[i]) && i > 8)
+        {
+            printf("Argument %d should be 'fifo' or 'edf'\n", i);
+            return (NULL);
+        }
+        i++;
+    }
+    i = 0;
     printf("number_of_coders: %d\n", atoi(argv[1]));
     printf("time_to_burnout: %d\n", atoi(argv[2]));
     printf("time_to_compile: %d\n", atoi(argv[3]));
@@ -30,7 +46,7 @@ int *parsing_args(int argc, char *argv[]) {
     return args;
 }
 
-t_simulation *init_sim(int argc, int *args)
+t_simulation *init_sim(int *args)
 {
     t_simulation *sim;
 
