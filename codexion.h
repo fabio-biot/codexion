@@ -35,7 +35,6 @@ typedef struct s_coder
 typedef struct s_simulation
 {
     int number_of_coders;
-
     long time_to_burnout;
     long time_to_compile;
     long time_to_debug;

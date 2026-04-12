@@ -1,0 +1,48 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: fabiochaput <fabiochaput@student.42.fr>    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/12/09 19:22:06 by lumarcuc          #+#    #+#              #
+#    Updated: 2026/04/11 17:18:58 by fabiochaput      ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+SRCS = main.c \
+       monitor_thread.c \
+       parsing_init.c \
+       utils.c
+
+OBJS = $(SRCS:.c=.o)
+
+CC = cc
+CFLAGS = -Wall -Wextra -Werror
+
+NAME = main
+
+RM = rm -f
+
+
+
+# Rules
+all: $(NAME)
+
+$(NAME): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+
+run: $(NAME)
+	./$(NAME) 3 9 4 2 2 2 2 fifo
+
+clean:
+	$(RM) $(OBJS)
+	$(MAKE) -C clean
+
+fclean: clean
+	$(RM) $(NAME)
+	$(MAKE) -C fclean
+
+re: fclean all
+
+.PHONY: all clean fclean re run

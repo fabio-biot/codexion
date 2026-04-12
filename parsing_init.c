@@ -8,10 +8,11 @@ int *parsing_args(int argc, char *argv[]) {
     args = malloc(sizeof(int) * 7);
     printf("Nombre d args: %d\n", argc);
 
-    if (argc != 8) {
+    if (argc != 9) {
         printf("Usage: %s <number_of_coders> <time_to_burnout>", argv[0]);
         printf("<time_to_compile> <time_to_debug> ");
         printf("<time_to_refactor> <number_of_compiles_required>");
+        printf("<dongle_cooldown>\n");
         printf("<dongle_cooldown>\n");
         return NULL;
     }
@@ -24,7 +25,7 @@ int *parsing_args(int argc, char *argv[]) {
             return (NULL);
         }
         i++;
-        if (is_number(argv[i]) && i > 8)
+        if (i == 8 && (strcmp(argv[8], "fifo") != 0 && strcmp(argv[8], "edf") != 0))
         {
             printf("Argument %d should be 'fifo' or 'edf'\n", i);
             return (NULL);
@@ -39,6 +40,7 @@ int *parsing_args(int argc, char *argv[]) {
     printf("time_to_refactor: %d\n", atoi(argv[5]));
     printf("number_of_compiles_required: %d\n", atoi(argv[6]));
     printf("dongle_cooldown: %d\n", atoi(argv[7]));
+    printf("Method used %s\n", argv[8]);
     while(i < 7) {
         args[i] = atoi(argv[i + 1]);
         i++;
@@ -92,6 +94,8 @@ t_coder *init_coders(t_simulation *sim)
         coders[i].sim = sim;
         coders[i].left = &sim->dongles[i];
         coders[i].right = &sim->dongles[(i + 1) % sim->number_of_coders];
+        coders[i].thread = 0;
+        pthread_mutex_init(&coders[i].lock, NULL);
 
         i++;
     }

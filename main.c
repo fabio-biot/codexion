@@ -38,12 +38,20 @@ void *coder_routine(void *arg)
         if (coder->id % 2 == 0)
         {
             while (get_time_in_ms() < coder->right->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
                 usleep(100);
+            }
             pthread_mutex_lock(&coder->right->mutex);
             print_state(sim, coder, "has taken a dongle", sim->start_time);
 
             while (get_time_in_ms() < coder->left->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
                 usleep(100);
+            }
             pthread_mutex_lock(&coder->left->mutex);
             print_state(sim, coder, "has taken a dongle", sim->start_time);
         }
@@ -51,16 +59,26 @@ void *coder_routine(void *arg)
         {
             pthread_mutex_lock(&coder->left->mutex);
             while (get_time_in_ms() < coder->left->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
                 usleep(100);
+            }
             print_state(sim, coder, "has taken a dongle", sim->start_time);
 
             pthread_mutex_lock(&coder->right->mutex);
             while (get_time_in_ms() < coder->right->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
                 usleep(100);
+            }
             print_state(sim, coder, "has taken a dongle", sim->start_time);
         }
 
+        pthread_mutex_lock(&coder->lock);
         coder->last_compile = get_time_in_ms();
+        pthread_mutex_unlock(&coder->lock);
         print_state(sim, coder, "is compiling", sim->start_time);
         usleep(sim->time_to_compile * 1000);
         now = get_time_in_ms();
@@ -90,7 +108,7 @@ int main(int argc, char *argv[])
 
     args = parsing_args(argc, argv);
     i = 0;
-    if (argc != 8 || !args)
+    if (argc != 9 || !args)
     {
         printf("Failed to parse args.\n");
         return (1);
