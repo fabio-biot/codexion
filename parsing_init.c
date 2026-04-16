@@ -91,7 +91,7 @@ t_coder *init_coders(t_simulation *sim)
     {
         coders[i].id = i + 1;
         coders[i].compile_count = 0;
-        coders[i].last_compile = sim->start_time;
+        coders[i].last_compile_start = sim->start_time;
         coders[i].sim = sim;
         coders[i].left = &sim->dongles[i];
         coders[i].right = &sim->dongles[(i + 1) % sim->number_of_coders];
@@ -117,7 +117,7 @@ t_dongle *init_dongles(t_simulation *sim)
     {
         pthread_mutex_init(&dongles[i].mutex, NULL);
         dongles[i].available_at = 0;
-        dongles->heap = malloc(2 * sizeof(t_request));
+        dongles[i].heap = malloc(sizeof(t_request) * sim->number_of_coders);
         i++;
     }
     return dongles;

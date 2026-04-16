@@ -25,3 +25,11 @@ void wait(long coder_availiable_at, t_simulation *sim)
         usleep(100);
     }
 }
+void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *dongle)
+{
+    t_request *req = create_request(sim, coder);
+
+    dongle->heap[dongle->size] = req;
+    heapify_up(dongle, dongle->size);
+    dongle->size++;
+}

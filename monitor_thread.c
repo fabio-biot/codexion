@@ -12,7 +12,7 @@ void *monitor_thread(void *arg)
         while (i < sim->number_of_coders)
         {
             pthread_mutex_lock(&sim->coders[i].lock);
-            last = sim->coders[i].last_compile;
+            last = sim->coders[i].last_compile_start;
             pthread_mutex_unlock(&sim->coders[i].lock);
 
             now = get_time_in_ms();
