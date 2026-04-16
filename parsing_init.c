@@ -48,7 +48,7 @@ int *parsing_args(int argc, char *argv[]) {
     return args;
 }
 
-t_simulation *init_sim(int *args)
+t_simulation *init_sim(int *args, char* scheduler)
 {
     t_simulation *sim;
 
@@ -63,6 +63,7 @@ t_simulation *init_sim(int *args)
     sim->time_to_refactor = args[4];
     sim->number_of_compiles_required = args[5];
     sim->dongle_cooldown = args[6];
+    sim->scheduler = scheduler;
 
     sim->stop = 0;
     sim->start_time = get_time_in_ms();
@@ -115,10 +116,21 @@ t_dongle *init_dongles(t_simulation *sim)
     while (i < sim->number_of_coders)
     {
         pthread_mutex_init(&dongles[i].mutex, NULL);
-        dongles[i].last_used = 0;
+        dongles[i].available_at = 0;
+        dongles->heap = malloc(2 * sizeof(t_request));
         i++;
     }
     return dongles;
+}
+
+t_request *init_request()
+{
+    t_request *request;
+
+    request = malloc(sizeof(t_request));
+    if (!request)
+        return NULL;
+    return (request);
 }
 
 // int main(int argc, char *argv[])

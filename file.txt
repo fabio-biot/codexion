@@ -1,6 +1,8 @@
 #include "codexion.h"
 
 
+pthread_mutex_t mutex;
+
 long get_time_in_ms(void)
 {
     struct timeval tv;
@@ -35,27 +37,47 @@ void *coder_routine(void *arg)
         pthread_mutex_unlock(&sim->stop_mutex);
         if (coder->id % 2 == 0)
         {
-            wait(coder->right->available_at, sim);
+            while (get_time_in_ms() < coder->right->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
+                usleep(100);
+            }
             pthread_mutex_lock(&coder->right->mutex);
             print_state(sim, coder, "has taken a dongle", sim->start_time);
-            
+
+            while (get_time_in_ms() < coder->left->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
+                usleep(100);
+            }
             pthread_mutex_lock(&coder->left->mutex);
-            wait(coder->left->available_at, sim);
             print_state(sim, coder, "has taken a dongle", sim->start_time);
         }
         else
         {
             pthread_mutex_lock(&coder->left->mutex);
-            wait(coder->right->available_at, sim);
+            while (get_time_in_ms() < coder->left->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
+                usleep(100);
+            }
             print_state(sim, coder, "has taken a dongle", sim->start_time);
 
             pthread_mutex_lock(&coder->right->mutex);
-            wait(coder->right->available_at, sim);
+            while (get_time_in_ms() < coder->right->available_at)
+            {
+                if (sim->stop)
+                    return NULL;
+                usleep(100);
+            }
             print_state(sim, coder, "has taken a dongle", sim->start_time);
         }
 
         pthread_mutex_lock(&coder->lock);
-        coder->last_compile_start = get_time_in_ms();
+        coder->last_compile = get_time_in_ms();
         pthread_mutex_unlock(&coder->lock);
         print_state(sim, coder, "is compiling", sim->start_time);
         usleep(sim->time_to_compile * 1000);
@@ -80,23 +102,13 @@ void *coder_routine(void *arg)
 
 int is_higher_priority(t_request a, t_request b, t_simulation *sim)
 {
-    if (strcmp(sim->scheduler, "fifo") == 0)
+    if (strcmp(sim->scheduler, "fifo"))
         return (a.arrival_time < b.arrival_time);
     else
         return (a.deadline < b.deadline);
 }
 
-t_request* create_request(t_simulation *sim, t_coder *coder)
-{
-    t_request *request;
 
-    request = init_request();
-    request->arrival_time = get_time_in_ms();
-    request->coder_id = coder->id;
-    request->deadline = coder->last_compile_start + sim->time_to_burnout;
-    
-    return (request);
-}
 
 int main(int argc, char *argv[])
 {

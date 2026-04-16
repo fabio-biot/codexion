@@ -16,3 +16,12 @@ int is_number(char *str)
     }
     return (1);
 }
+void wait(long coder_availiable_at, t_simulation *sim)
+{
+    while (get_time_in_ms() < coder_availiable_at)
+    {
+        if (sim->stop)
+            return ;
+        usleep(100);
+    }
+}
