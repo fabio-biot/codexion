@@ -13,8 +13,6 @@ void *compile_cooldown_debug_refactor(t_coder *coder, t_simulation *sim)
     long now;
 
     printf("\n\nCOMPILE_COOLDOWN\n\n");
-    pthread_cond_broadcast(&coder->left->cond);
-    pthread_cond_broadcast(&coder->right->cond);
     pthread_mutex_lock(&coder->lock);
     coder->last_compile_start = get_time_in_ms();
     pthread_mutex_unlock(&coder->lock);
@@ -26,6 +24,8 @@ void *compile_cooldown_debug_refactor(t_coder *coder, t_simulation *sim)
     coder->left->available_at = now + sim->dongle_cooldown;
     coder->right->is_taken = 0;
     coder->left->is_taken = 0;
+    pthread_cond_broadcast(&coder->left->cond);
+    pthread_cond_broadcast(&coder->right->cond);
     pthread_mutex_unlock(&coder->right->mutex);
     pthread_mutex_unlock(&coder->left->mutex);
 

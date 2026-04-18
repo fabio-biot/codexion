@@ -84,7 +84,7 @@ void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *dongle)
         printf("!dongle_available(dongle)");
     while (!dongle_available(dongle) || dongle->heap[0] != req)
     {
-        printf("\n=============================================================================================CR7\n");
+        printf("\n=CR7\n");
         pthread_cond_wait(&dongle->cond, &dongle->mutex);
         if (sim->stop)
         {
