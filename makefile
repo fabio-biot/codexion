@@ -6,14 +6,16 @@
 #    By: fchaput <fchaput@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/12/09 19:22:06 by lumarcuc          #+#    #+#              #
-#    Updated: 2026/04/13 15:37:42 by fchaput          ###   ########.fr        #
+#    Updated: 2026/04/18 17:38:17 by fchaput          ###   ########.fr        #
 #                                                                              #
 #******************************************************************************#
 
 SRCS = main.c \
        monitor_thread.c \
        parsing_init.c \
-       utils.c
+       utils.c \
+	   heap_management.c \
+	   actions.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -33,7 +35,7 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 run: $(NAME)
-	./$(NAME) 3 9 4 2 2 2 2 fifo
+	./$(NAME) 3 919 1 2 2 2 2 fifo
 
 clean:
 	$(RM) $(OBJS)

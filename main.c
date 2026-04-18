@@ -21,81 +21,30 @@ void *coder_routine(void *arg)
     t_coder *coder = (t_coder *)arg;
     t_simulation *sim = coder->sim;
     int i;
-    long now;
  
     i = 0;
     while (sim->number_of_compiles_required > i)
     {
-        pthread_mutex_lock(&sim->stop_mutex);
-        if (sim->stop)
-        {
-            pthread_mutex_unlock(&sim->stop_mutex);
+        if (get_stop(sim))
             return NULL;
-        }
-        pthread_mutex_unlock(&sim->stop_mutex);
         if (coder->id % 2 == 0)
         {
-            wait(coder->right->available_at, sim);
-            pthread_mutex_lock(&coder->right->mutex);
-            print_state(sim, coder, "has taken a dongle", sim->start_time);
-            
-            pthread_mutex_lock(&coder->left->mutex);
-            wait(coder->left->available_at, sim);
-            print_state(sim, coder, "has taken a dongle", sim->start_time);
+            process_take_dongle(coder, sim, coder->right);
+            process_take_dongle(coder, sim, coder->left);
+            printf("process take dongles done for coder %d\n", coder->id);
         }
         else
         {
-            pthread_mutex_lock(&coder->left->mutex);
-            wait(coder->right->available_at, sim);
-            print_state(sim, coder, "has taken a dongle", sim->start_time);
-
-            pthread_mutex_lock(&coder->right->mutex);
-            wait(coder->right->available_at, sim);
-            print_state(sim, coder, "has taken a dongle", sim->start_time);
+            process_take_dongle(coder, sim, coder->left);
+            process_take_dongle(coder, sim, coder->right);
+            printf("process take dongles done for coder %d\n", coder->id);
         }
-
-        pthread_mutex_lock(&coder->lock);
-        coder->last_compile_start = get_time_in_ms();
-        pthread_mutex_unlock(&coder->lock);
-        print_state(sim, coder, "is compiling", sim->start_time);
-        usleep(sim->time_to_compile * 1000);
-        now = get_time_in_ms();
-
-        coder->right->available_at = now + sim->dongle_cooldown;
-        coder->left->available_at = now + sim->dongle_cooldown;
-        pthread_mutex_unlock(&coder->right->mutex);
-        pthread_mutex_unlock(&coder->left->mutex);
-
-        print_state(sim, coder, "is debugging", sim->start_time);
-        usleep(sim->time_to_debug * 1000);
-
-        print_state(sim, coder, "is refactoring", sim->start_time);
-        usleep(sim->time_to_refactor * 1000);
-
+        compile_cooldown_debug_refactor(coder, sim);
+        printf("process compile ... done for coder %d\n", coder->id);
         i++;
         coder->compile_count++;
     }
     return NULL;
-}
-
-int is_higher_priority(t_request a, t_request b, t_simulation *sim)
-{
-    if (strcmp(sim->scheduler, "fifo") == 0)
-        return (a.arrival_time < b.arrival_time);
-    else
-        return (a.deadline < b.deadline);
-}
-
-t_request* create_request(t_simulation *sim, t_coder *coder)
-{
-    t_request *request;
-
-    request = init_request();
-    request->arrival_time = get_time_in_ms();
-    request->coder_id = coder->id;
-    request->deadline = coder->last_compile_start + sim->time_to_burnout;
-    
-    return (request);
 }
 
 int main(int argc, char *argv[])
@@ -122,16 +71,17 @@ int main(int argc, char *argv[])
                        NULL,
                        coder_routine,
                        &sim->coders[i]);
+        printf("Thread created for coder %d\n", i);
         i++;
     }
     pthread_create(&sim->thread_monitor, NULL, monitor_thread, sim);
     i = 0;
-    while (i < sim->number_of_coders)
+    while(i < sim->number_of_coders)
     {
         pthread_join(sim->coders[i].thread, NULL);
         i++;
     }
     pthread_join(sim->thread_monitor, NULL);
-    
+
     return (0);
 }
