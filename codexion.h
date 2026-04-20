@@ -77,7 +77,6 @@ int is_number(char *str);
 void print_state(t_simulation *sim, t_coder *coder, char *state, long start_time);
 void *monitor_thread(void *arg);
 t_request *init_request();
-void wait(long coder_availiable_at, t_simulation *sim);
 t_request *create_request(t_simulation *sim, t_coder *coder);
 void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *dongle);
 int compare(t_request *a, t_request *b, char *scheduler);
@@ -88,7 +87,7 @@ t_request *pop_heap(t_dongle *d, char *scheduler);
 int push_heap(t_dongle *d, t_request *req, char *scheduler);
 int dongle_available(t_dongle *d);
 void *process_take_dongle(t_coder *coder, t_simulation *sim, t_dongle *dongle);
-void *compile_cooldown_debug_refactor(t_coder *coder, t_simulation *sim);
+void release_dongle(t_dongle *d);
 int get_stop(t_simulation *sim);
 
 #endif

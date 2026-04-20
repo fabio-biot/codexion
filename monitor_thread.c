@@ -14,24 +14,19 @@ void *monitor_thread(void *arg)
             pthread_mutex_lock(&sim->coders[i].lock);
             last = sim->coders[i].last_compile_start;
             pthread_mutex_unlock(&sim->coders[i].lock);
-
             now = get_time_in_ms();
-
-            pthread_mutex_lock(&sim->stop_mutex);
-            if (sim->stop)
-            {
-                pthread_mutex_unlock(&sim->stop_mutex);
-                return NULL;
-            }
-            pthread_mutex_unlock(&sim->stop_mutex);
-
             if (now - last > sim->time_to_burnout)
             {
                 pthread_mutex_lock(&sim->stop_mutex);
                 sim->stop = 1;
                 pthread_mutex_unlock(&sim->stop_mutex);
-
                 write(1, "BURNOUT\n", 8);
+                for (int j = 0; j < sim->number_of_coders; j++)
+                {
+                    pthread_mutex_lock(&sim->dongles[j].mutex);
+                    pthread_cond_broadcast(&sim->dongles[j].cond);
+                    pthread_mutex_unlock(&sim->dongles[j].mutex);
+                }
                 return NULL;
             }
             i++;

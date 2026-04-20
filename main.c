@@ -20,6 +20,8 @@ void *coder_routine(void *arg)
 {
     t_coder *coder = (t_coder *)arg;
     t_simulation *sim = coder->sim;
+    t_dongle *first;
+    t_dongle *second;
     int i;
  
     i = 0;
@@ -27,20 +29,19 @@ void *coder_routine(void *arg)
     {
         if (get_stop(sim))
             return NULL;
-        if (coder->id % 2 == 0)
+        if (coder->left < coder->right)
         {
-            process_take_dongle(coder, sim, coder->right);
-            process_take_dongle(coder, sim, coder->left);
-            printf("process take dongles done for coder %d\n", coder->id);
+            first = coder->left;
+            second = coder->right;
         }
         else
         {
-            process_take_dongle(coder, sim, coder->left);
-            process_take_dongle(coder, sim, coder->right);
-            printf("process take dongles done for coder %d\n", coder->id);
+            first = coder->right;
+            second = coder->left;
         }
-        compile_cooldown_debug_refactor(coder, sim);
-        printf("process compile ... done for coder %d\n", coder->id);
+        process_take_dongle(coder, sim, first);
+        process_take_dongle(coder, sim, second);        
+        printf("process take dongles done for coder %d\n", coder->id);
         i++;
         coder->compile_count++;
     }

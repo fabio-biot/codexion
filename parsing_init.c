@@ -24,7 +24,6 @@ int *parsing_args(int argc, char *argv[]) {
             printf("Argument %d should be an int\n", i);
             return (NULL);
         }
-        i++;
         if (i == 8 && (strcmp(argv[8], "fifo") != 0 && strcmp(argv[8], "edf") != 0))
         {
             printf("Argument %d should be 'fifo' or 'edf'\n", i);
@@ -105,20 +104,17 @@ t_coder *init_coders(t_simulation *sim)
 
 t_dongle *init_dongles(t_simulation *sim)
 {
-    t_dongle *dongles;
-    int i;
+    t_dongle *dongles = malloc(sizeof(t_dongle) * sim->number_of_coders);
 
-    dongles = malloc(sizeof(t_dongle) * sim->number_of_coders);
-    if (!dongles)
-        return NULL;
-
-    i = 0;
-    while (i < sim->number_of_coders)
+    for (int i = 0; i < sim->number_of_coders; i++)
     {
         pthread_mutex_init(&dongles[i].mutex, NULL);
+        pthread_cond_init(&dongles[i].cond, NULL);
+        dongles[i].heap = malloc(sizeof(t_request *) * sim->number_of_coders);
+        dongles[i].size = 0;
+        dongles[i].capacity = sim->number_of_coders;
+        dongles[i].is_taken = 0;
         dongles[i].available_at = 0;
-        dongles[i].heap = malloc(sizeof(t_request) * sim->number_of_coders);
-        i++;
     }
     return dongles;
 }

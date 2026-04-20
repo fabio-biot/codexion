@@ -62,7 +62,7 @@ void heapify_down(t_dongle *d, int index, char *scheduler)
         {
             swap(&d->heap[index], &d->heap[smallest]);
             index = smallest;
-            printf("PHeapify down Cas 3\n");
+            printf("Heapify down Cas 3\n");
         }
         else
             break;
@@ -94,6 +94,6 @@ int push_heap(t_dongle *d, t_request *req, char *scheduler)
     d->heap[d->size] = req;
     heapify_up(d, d->size, scheduler);
     d->size++;
-    printf("Push Heap");
+    printf("Push HEap");
     return (1);
 }

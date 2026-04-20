@@ -16,15 +16,15 @@ int is_number(char *str)
     }
     return (1);
 }
-void wait(long coder_availiable_at, t_simulation *sim)
-{
-    while (get_time_in_ms() < coder_availiable_at)
-    {
-        if (sim->stop)
-            return ;
-        usleep(100);
-    }
-}
+// void wait(long coder_availiable_at, t_simulation *sim)
+// {
+//     while (get_time_in_ms() < coder_availiable_at)
+//     {
+//         if (sim->stop)
+//             return ;
+//         usleep(100);
+//     }
+// }
 
 int dongle_available(t_dongle *d)
 {
@@ -64,39 +64,39 @@ t_request *create_request(t_simulation *sim, t_coder *coder)
     return (req);
 }
 
-void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *dongle)
+void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *d)
 {
-    pthread_mutex_lock(&dongle->mutex);
+    t_request *req;
 
-    t_request *req = create_request(sim, coder);
-
-    dongle->heap[dongle->size] = req;
-    push_heap(dongle, req, sim->scheduler);
-    heapify_up(dongle, dongle->size, sim->scheduler);
-    printf("coder -> %d, requests dongle", coder->id);
-    dongle->size++;
-    printf("\n\nreq = %d et dongle->heap[0] = %d\n", req->coder_id, dongle->heap[0]->coder_id);
-    printf("req = %ld et dongle->heap[0] = %ld\n", req->arrival_time, dongle->heap[0]->arrival_time);
-    printf("req = %ld et dongle->heap[0] = %ld\n\n\n", req->deadline, dongle->heap[0]->deadline);
-    if (dongle->heap[0] != req)
-        printf("dongle->heap[0] != req");
-    if (!dongle_available(dongle))
-        printf("!dongle_available(dongle)");
-    while (!dongle_available(dongle) || dongle->heap[0] != req)
+    pthread_mutex_lock(&d->mutex);
+    if (sim->stop)
     {
-        printf("\n=CR7\n");
-        pthread_cond_wait(&dongle->cond, &dongle->mutex);
+        pthread_mutex_unlock(&d->mutex);
+        return;
+    }
+    req = create_request(sim, coder);
+    if (!req)
+    {
+        pthread_mutex_unlock(&d->mutex);
+        return;
+    }
+    push_heap(d, req, sim->scheduler);
+    while (1)
+    {
         if (sim->stop)
         {
-            pthread_mutex_unlock(&dongle->mutex);
+            pthread_mutex_unlock(&d->mutex);
             return;
         }
+        if (d->heap[0] == req && !d->is_taken && get_time_in_ms() >= d->available_at)
+        {
+            pop_heap(d, sim->scheduler);
+            d->is_taken = 1;
+            pthread_mutex_unlock(&d->mutex);
+            return;
+        }
+        pthread_cond_wait(&d->cond, &d->mutex);
     }
-    pop_heap(dongle, sim->scheduler);
-    // heapify_down(dongle, index, sim->scheduler);
-    dongle->is_taken = 1;
-
-    pthread_mutex_unlock(&dongle->mutex);
 }
 
 int get_stop(t_simulation *sim)
