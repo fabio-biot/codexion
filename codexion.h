@@ -55,6 +55,7 @@ typedef struct s_simulation
     long dongle_cooldown;
     int stop;
     long start_time;
+    int coders_ended;
     char* scheduler;
 
     t_dongle *dongles;

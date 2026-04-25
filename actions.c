@@ -2,7 +2,7 @@
 
 void *process_take_dongle(t_coder *coder, t_simulation *sim, t_dongle *dongle)
 {
-    if (sim->stop)
+    if (get_stop(sim))
         return NULL;
     request_dongle(sim, coder, dongle);
     print_state(sim, coder,"has taken a dongle", sim->start_time);

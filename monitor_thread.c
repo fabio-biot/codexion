@@ -29,6 +29,14 @@ void *monitor_thread(void *arg)
                 }
                 return NULL;
             }
+            if (sim->number_of_coders == sim->coders_ended)
+            {
+                pthread_mutex_lock(&sim->stop_mutex);
+                sim->stop = 1;
+                pthread_mutex_unlock(&sim->stop_mutex);
+                write(1, "END\n", 4);
+                return NULL;
+            }
             i++;
         }
         usleep(1000);

@@ -28,7 +28,6 @@ void heapify_up(t_dongle *d, int index, char *scheduler)
         {
             swap(&d->heap[index], &d->heap[parent]);
             index = parent;
-            printf("Heapify UP\n\n");
         }
         else
             break;
@@ -47,22 +46,18 @@ void heapify_down(t_dongle *d, int index, char *scheduler)
         right = 2 * index + 2;
         smallest = index;
 
-        printf("PHeapify down\n\n");
         if (left < d->size &&
             compare(d->heap[left], d->heap[smallest], scheduler))
             smallest = left;
-                printf("PHeapify down Cas 1\n");
 
         if (right < d->size &&
             compare(d->heap[right], d->heap[smallest], scheduler))
             smallest = right;
-                printf("PHeapify down Cas 2\n");
 
         if (smallest != index)
         {
             swap(&d->heap[index], &d->heap[smallest]);
             index = smallest;
-            printf("Heapify down Cas 3\n");
         }
         else
             break;
@@ -75,14 +70,10 @@ t_request *pop_heap(t_dongle *d, char *scheduler)
 
     if (d->size == 0)
         return (NULL);
-
     top = d->heap[0];
-
     d->heap[0] = d->heap[d->size - 1];
     d->size--;
-
     heapify_down(d, 0, scheduler);
-    printf("POP Heap");
     return (top);
 }
 
@@ -94,6 +85,5 @@ int push_heap(t_dongle *d, t_request *req, char *scheduler)
     d->heap[d->size] = req;
     heapify_up(d, d->size, scheduler);
     d->size++;
-    printf("Push HEap");
     return (1);
 }

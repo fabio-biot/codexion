@@ -1,12 +1,11 @@
 #include "codexion.h"
 
-
 long get_time_in_ms(void)
 {
     struct timeval tv;
 
     gettimeofday(&tv, NULL);
-    return (tv.tv_sec * 1000L + tv.tv_usec / 1000L);
+    return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }
 
 void print_state(t_simulation *sim, t_coder *coder, char *msg, long start)
@@ -23,12 +22,10 @@ void *coder_routine(void *arg)
     t_dongle *first;
     t_dongle *second;
     int i;
- 
+
     i = 0;
-    while (sim->number_of_compiles_required > i)
+    while (!get_stop(sim) && i < sim->number_of_compiles_required)
     {
-        if (get_stop(sim))
-            return NULL;
         if (coder->left < coder->right)
         {
             first = coder->left;
@@ -40,12 +37,54 @@ void *coder_routine(void *arg)
             second = coder->left;
         }
         process_take_dongle(coder, sim, first);
-        process_take_dongle(coder, sim, second);        
-        printf("process take dongles done for coder %d\n", coder->id);
-        i++;
+        if (get_stop(sim))
+            break;
+        process_take_dongle(coder, sim, second);
+        if (get_stop(sim))
+            break;
+        pthread_mutex_lock(&coder->lock);
+        coder->last_compile_start = get_time_in_ms();
+        pthread_mutex_unlock(&coder->lock);
+        print_state(sim, coder, "is compiling", sim->start_time);
+        usleep(sim->time_to_compile * 1000);
+        if (get_stop(sim))
+            break;
+        release_dongle(first);
+        release_dongle(second);
         coder->compile_count++;
+        i++;
+        print_state(sim, coder, "is debugging", sim->start_time);
+        usleep(sim->time_to_debug * 1000);
+        print_state(sim, coder, "is refactoring", sim->start_time);
+        usleep(sim->time_to_refactor * 1000);
     }
+    sim->coders_ended++;
     return NULL;
+}
+
+void join_all(t_simulation *sim)
+{
+    int i = 0;
+
+    while (i < sim->number_of_coders)
+    {
+        pthread_join(sim->coders[i].thread, NULL);
+        i++;
+    }
+    pthread_join(sim->thread_monitor, NULL);
+}
+
+void cleanup_simulation(t_simulation *sim)
+{
+    int i = 0;
+
+    while (i < sim->number_of_coders)
+    {
+        pthread_mutex_lock(&sim->dongles[i].mutex);
+        pthread_cond_broadcast(&sim->dongles[i].cond);
+        pthread_mutex_unlock(&sim->dongles[i].mutex);
+        i++;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -53,36 +92,29 @@ int main(int argc, char *argv[])
     int *args;
     int i;
     t_simulation *sim;
-
-    args = parsing_args(argc, argv);
-    i = 0;
-    if (argc != 9 || !args)
+    if (argc != 9)
     {
-        printf("Failed to parse args.\n");
-        return (1);
+        printf("Invalid args\n");
+        return 1;
     }
-
+    args = parsing_args(argc, argv);
+    if (!args)
+    {
+        printf("Failed to parse args\n");
+        return 1;
+    }
     sim = init_sim(args, argv[8]);
     sim->start_time = get_time_in_ms();
     sim->stop = 0;
-
+    i = 0;
     while (i < sim->number_of_coders)
     {
-        pthread_create(&sim->coders[i].thread,
-                       NULL,
-                       coder_routine,
-                       &sim->coders[i]);
-        printf("Thread created for coder %d\n", i);
+        pthread_create(&sim->coders[i].thread, NULL,
+                       coder_routine, &sim->coders[i]);
         i++;
     }
     pthread_create(&sim->thread_monitor, NULL, monitor_thread, sim);
-    i = 0;
-    while(i < sim->number_of_coders)
-    {
-        pthread_join(sim->coders[i].thread, NULL);
-        i++;
-    }
-    pthread_join(sim->thread_monitor, NULL);
-
-    return (0);
+    join_all(sim);
+    cleanup_simulation(sim);
+    return 0;
 }
