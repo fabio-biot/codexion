@@ -6,7 +6,7 @@
 #    By: fabiochaput <fabiochaput@student.42.fr>    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/12/09 19:22:06 by lumarcuc          #+#    #+#              #
-#    Updated: 2026/04/25 16:38:01 by fabiochaput      ###   ########.fr        #
+#    Updated: 2026/04/25 18:23:54 by fabiochaput      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -35,7 +35,7 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 run: $(NAME)
-	./$(NAME) 3 2 9 2 2 2 2 fifo
+	./$(NAME) 34 77 1 2 2 2 2 fifo
 
 clean:
 	$(RM) $(OBJS)
