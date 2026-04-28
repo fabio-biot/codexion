@@ -3,6 +3,7 @@ void *monitor_thread(void *arg)
 {
     t_simulation *sim = (t_simulation *)arg;
     int i;
+    int j;
     long now;
     long last;
 
@@ -20,12 +21,14 @@ void *monitor_thread(void *arg)
                 pthread_mutex_lock(&sim->stop_mutex);
                 sim->stop = 1;
                 pthread_mutex_unlock(&sim->stop_mutex);
-                write(1, "BURNOUT\n", 8);
-                for (int j = 0; j < sim->number_of_coders; j++)
+                printf("%ld %d burned out\n",  get_time_in_ms() - sim->start_time, i + 1);
+                j = 0;
+                while(j < sim->number_of_coders)
                 {
                     pthread_mutex_lock(&sim->dongles[j].mutex);
                     pthread_cond_broadcast(&sim->dongles[j].cond);
                     pthread_mutex_unlock(&sim->dongles[j].mutex);
+                    j++;
                 }
                 return NULL;
             }
@@ -34,7 +37,6 @@ void *monitor_thread(void *arg)
                 pthread_mutex_lock(&sim->stop_mutex);
                 sim->stop = 1;
                 pthread_mutex_unlock(&sim->stop_mutex);
-                write(1, "END\n", 4);
                 return NULL;
             }
             i++;

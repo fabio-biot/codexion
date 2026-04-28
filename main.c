@@ -58,7 +58,9 @@ void *coder_routine(void *arg)
         print_state(sim, coder, "is refactoring", sim->start_time);
         usleep(sim->time_to_refactor * 1000);
     }
+    pthread_mutex_lock(&sim->stop_mutex);
     sim->coders_ended++;
+    pthread_mutex_unlock(&sim->stop_mutex);
     return NULL;
 }
 
@@ -76,15 +78,33 @@ void join_all(t_simulation *sim)
 
 void cleanup_simulation(t_simulation *sim)
 {
-    int i = 0;
+    int i;
 
+    if (!sim)
+        return;
+    i = 0;
     while (i < sim->number_of_coders)
     {
-        pthread_mutex_lock(&sim->dongles[i].mutex);
-        pthread_cond_broadcast(&sim->dongles[i].cond);
-        pthread_mutex_unlock(&sim->dongles[i].mutex);
+        pthread_mutex_destroy(&sim->coders[i].lock);
         i++;
     }
+    i = 0;
+    while (i < sim->number_of_coders)
+    {
+        pthread_mutex_destroy(&sim->dongles[i].mutex);
+        pthread_cond_destroy(&sim->dongles[i].cond);
+        if (sim->dongles[i].heap)
+            free(sim->dongles[i].heap);
+
+        i++;
+    }
+    pthread_mutex_destroy(&sim->print_mutex);
+    pthread_mutex_destroy(&sim->stop_mutex);
+    if (sim->coders)
+        free(sim->coders);
+    if (sim->dongles)
+        free(sim->dongles);
+    free(sim);
 }
 
 int main(int argc, char *argv[])

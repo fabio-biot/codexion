@@ -76,6 +76,7 @@ void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *d)
     {
         if (get_stop(sim))
         {
+            free(req);
             pthread_mutex_unlock(&d->mutex);
             return;
         }
@@ -84,6 +85,7 @@ void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *d)
         {
             pop_heap(d, sim->scheduler);
             d->is_taken = 1;
+            free(req);
             pthread_mutex_unlock(&d->mutex);
             return;
         }
