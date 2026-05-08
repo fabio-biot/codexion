@@ -8,6 +8,7 @@ void *process_take_dongle(t_coder *coder, t_simulation *sim, t_dongle *dongle)
     print_state(sim, coder,"has taken a dongle", sim->start_time);
     return(0);
 }
+
 void release_dongle(t_dongle *d)
 {
     pthread_mutex_lock(&d->mutex);

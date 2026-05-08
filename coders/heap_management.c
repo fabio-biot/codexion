@@ -46,13 +46,17 @@ void heapify_down(t_dongle *d, int index, char *scheduler)
         right = 2 * index + 2;
         smallest = index;
 
-        if (left < d->size &&
-            compare(d->heap[left], d->heap[smallest], scheduler))
-            smallest = left;
+        if (left < d->size)
+        {
+            if (compare(d->heap[left], d->heap[smallest], scheduler))
+                smallest = left;
+        }
 
-        if (right < d->size &&
-            compare(d->heap[right], d->heap[smallest], scheduler))
-            smallest = right;
+        if (right < d->size)
+        {
+            if (compare(d->heap[right], d->heap[smallest], scheduler))
+                smallest = right;
+        }
 
         if (smallest != index)
         {
