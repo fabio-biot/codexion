@@ -60,7 +60,6 @@ t_simulation *init_sim(int *args, char* scheduler)
     sim = malloc(sizeof(t_simulation));
     if (!sim)
         return NULL;
-
     sim->number_of_coders = args[0];
     sim->time_to_burnout = args[1];
     sim->time_to_compile = args[2];
@@ -69,16 +68,12 @@ t_simulation *init_sim(int *args, char* scheduler)
     sim->number_of_compiles_required = args[5];
     sim->dongle_cooldown = args[6];
     sim->scheduler = scheduler;
-
     sim->stop = 0;
     sim->start_time = get_time_in_ms();
-
     pthread_mutex_init(&sim->print_mutex, NULL);
     pthread_mutex_init(&sim->stop_mutex, NULL);
-
     sim->dongles = init_dongles(sim);
     sim->coders = init_coders(sim);
-
     return sim;
 }
 
@@ -90,7 +85,6 @@ t_coder *init_coders(t_simulation *sim)
     coders = malloc(sizeof(t_coder) * sim->number_of_coders);
     if (!coders)
         return NULL;
-
     i = 0;
     while (i < sim->number_of_coders)
     {
@@ -102,7 +96,6 @@ t_coder *init_coders(t_simulation *sim)
         coders[i].right = &sim->dongles[(i + 1) % sim->number_of_coders];
         coders[i].thread = 0;
         pthread_mutex_init(&coders[i].lock, NULL);
-
         i++;
     }
     return coders;
@@ -126,15 +119,7 @@ t_dongle *init_dongles(t_simulation *sim)
     return dongles;
 }
 
-t_request *init_request()
-{
-    t_request *request;
 
-    request = malloc(sizeof(t_request));
-    if (!request)
-        return NULL;
-    return (request);
-}
 
 // int main(int argc, char *argv[])
 // {

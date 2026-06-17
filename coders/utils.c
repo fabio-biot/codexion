@@ -54,55 +54,92 @@ t_request *create_request(t_simulation *sim, t_coder *coder)
     return (req);
 }
 
-void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *d)
+t_request *init_request(t_simulation *sim,
+			t_coder *coder, t_dongle *d)
 {
-    t_request *req;
-    long now;
+	t_request	*req;
 
-    pthread_mutex_lock(&d->mutex);
-    if (get_stop(sim))
-    {
-        pthread_mutex_unlock(&d->mutex);
-        return;
-    }
-    req = create_request(sim, coder);
-    if (!req)
-    {
-        pthread_mutex_unlock(&d->mutex);
-        return;
-    }
-    push_heap(d, req, sim->scheduler);
-    while (1)
-    {
-        if (get_stop(sim))
-        {
-            remove_request(d, req, sim->scheduler);
-            free(req);
-            pthread_mutex_unlock(&d->mutex);
-            return;
-        }
-        now = get_time_in_ms();
-        if (d->heap[0] == req && !d->is_taken && now >= d->available_at)
-        {
-            pop_heap(d, sim->scheduler);
-            d->is_taken = 1;
-            free(req);
-            pthread_mutex_unlock(&d->mutex);
-            return;
-        }
-        if (d->heap[0] == req && !d->is_taken && now < d->available_at)
-        {
-            struct timespec ts;
-            struct timeval tv;
-            gettimeofday(&tv, NULL);
-            long wait_ms = d->available_at - now;
-            ts.tv_sec = tv.tv_sec + (tv.tv_usec / 1000 + wait_ms) / 1000;
-            ts.tv_nsec = ((tv.tv_usec / 1000 + wait_ms) % 1000) * 1000000;
-            pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
-        }
-        else
-            pthread_cond_wait(&d->cond, &d->mutex);
-    }
+	pthread_mutex_lock(&d->mutex);
+	if (get_stop(sim))
+	{
+		pthread_mutex_unlock(&d->mutex);
+		return (NULL);
+	}
+	req = create_request(sim, coder);
+	if (!req)
+	{
+		pthread_mutex_unlock(&d->mutex);
+		return (NULL);
+	}
+	push_heap(d, req, sim->scheduler);
+	return (req);
+}
+
+int	can_take_dongle(t_simulation *sim,
+			t_dongle *d, t_request *req)
+{
+	long	now;
+
+	now = get_time_in_ms();
+	if (d->heap[0] == req && !d->is_taken && now >= d->available_at)
+	{
+		pop_heap(d, sim->scheduler);
+		d->is_taken = 1;
+		return (1);
+	}
+	return (0);
+}
+
+void	wait_dongle(t_simulation *sim,
+			t_dongle *d, t_request *req, long now)
+{
+	struct timespec	ts;
+	struct timeval	tv;
+	long			wait_ms;
+
+	(void)sim;
+	if (d->heap[0] == req && !d->is_taken && now < d->available_at)
+	{
+		gettimeofday(&tv, NULL);
+		wait_ms = d->available_at - now;
+		ts.tv_sec = tv.tv_sec + (tv.tv_usec / 1000 + wait_ms) / 1000;
+		ts.tv_nsec = ((tv.tv_usec / 1000 + wait_ms) % 1000) * 1000000;
+		pthread_cond_timedwait(&d->cond, &d->mutex, &ts);
+	}
+	else
+		pthread_cond_wait(&d->cond, &d->mutex);
+}
+
+void	request_dongle(t_simulation *sim,
+			t_coder *coder, t_dongle *d)
+{
+	t_request	*req;
+	long		now;
+
+	req = init_request(sim, coder, d);
+	if (!req)
+	{
+		pthread_mutex_unlock(&d->mutex);
+		return ;
+	}
+	while (1)
+	{
+		if (get_stop(sim))
+		{
+			remove_request(d, req, sim->scheduler);
+			free(req);
+			pthread_mutex_unlock(&d->mutex);
+			return ;
+		}
+		now = get_time_in_ms();
+		if (can_take_dongle(sim, d, req))
+		{
+			free(req);
+			pthread_mutex_unlock(&d->mutex);
+			return ;
+		}
+		wait_dongle(sim, d, req, now);
+	}
 }
 
 int get_stop(t_simulation *sim)

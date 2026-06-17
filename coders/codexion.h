@@ -78,7 +78,7 @@ long get_time_in_ms();
 int is_number(char *str);
 void print_state(t_simulation *sim, t_coder *coder, char *state, long start_time);
 void *monitor_thread(void *arg);
-t_request *init_request();
+t_request *init_request(t_simulation *sim, t_coder *coder, t_dongle *d);
 t_request *create_request(t_simulation *sim, t_coder *coder);
 void request_dongle(t_simulation *sim, t_coder *coder, t_dongle *dongle);
 int compare(t_request *a, t_request *b, char *scheduler);

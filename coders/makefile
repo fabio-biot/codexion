@@ -21,7 +21,7 @@ $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
 
 run: $(NAME)
-	./$(NAME) 8 1 856 2 2 2 256 edf
+	./$(NAME) 8 45 2 2 2 2 2 edf
 
 clean:
 	$(RM) $(OBJS)

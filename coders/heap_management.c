@@ -33,38 +33,39 @@ void heapify_up(t_dongle *d, int index, char *scheduler)
             break;
     }
 }
-
-void heapify_down(t_dongle *d, int index, char *scheduler)
+static int  get_smallest(t_dongle *d, int index, char *scheduler)
 {
     int left;
     int right;
     int smallest;
 
+    left = 2 * index + 1;
+    right = 2 * index + 2;
+    smallest = index;
+    if (left < d->size)
+    {
+        if (compare(d->heap[left], d->heap[smallest], scheduler))
+            smallest = left;
+    }
+    if (right < d->size)
+    {
+        if (compare(d->heap[right], d->heap[smallest], scheduler))
+            smallest = right;
+    }
+    return (smallest);
+}
+
+void    heapify_down(t_dongle *d, int index, char *scheduler)
+{
+    int smallest;
+
     while (1)
     {
-        left = 2 * index + 1;
-        right = 2 * index + 2;
-        smallest = index;
-
-        if (left < d->size)
-        {
-            if (compare(d->heap[left], d->heap[smallest], scheduler))
-                smallest = left;
-        }
-
-        if (right < d->size)
-        {
-            if (compare(d->heap[right], d->heap[smallest], scheduler))
-                smallest = right;
-        }
-
-        if (smallest != index)
-        {
-            swap(&d->heap[index], &d->heap[smallest]);
-            index = smallest;
-        }
-        else
-            break;
+        smallest = get_smallest(d, index, scheduler);
+        if (smallest == index)
+            break ;
+        swap(&d->heap[index], &d->heap[smallest]);
+        index = smallest;
     }
 }
 
