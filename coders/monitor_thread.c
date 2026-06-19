@@ -1,6 +1,18 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   monitor_thread.c                                   :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fchaput <fchaput@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/19 10:29:46 by fchaput           #+#    #+#             */
+/*   Updated: 2026/06/19 10:29:51 by fchaput          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "codexion.h"
 
-static int	check_burnout(t_simulation *sim, int i, long now)
+int	check_burnout(t_simulation *sim, int i, long now)
 {
 	long	last;
 

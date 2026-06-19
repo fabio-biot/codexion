@@ -1,8 +1,13 @@
 SRCS = main.c \
        monitor_thread.c \
        parsing_init.c \
+       parsing_norm.c \
        utils.c \
 	   heap_management.c \
+	   heap_manag_norm.c \
+	   coder_routine.c \
+	   utils_norm.c \
+	   utils_norm_bis.c \
 	   actions.c
 
 OBJS = $(SRCS:.c=.o)

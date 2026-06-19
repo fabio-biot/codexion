@@ -1,116 +1,87 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   heap_management.c                                  :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: fchaput <fchaput@student.42.fr>            +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/04/19 09:28:33 by fchaput           #+#    #+#             */
+/*   Updated: 2026/06/19 09:39:58 by fchaput          ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "codexion.h"
 
-int compare(t_request *a, t_request *b, char *scheduler)
+int	compare(t_request *a, t_request *b, char *scheduler)
 {
-    if (strcmp(scheduler, "fifo") == 0)
-        return (a->arrival_time < b->arrival_time);
-    else
-        return (a->deadline < b->deadline);
+	if (strcmp(scheduler, "fifo") == 0)
+		return (a->arrival_time < b->arrival_time);
+	else
+		return (a->deadline < b->deadline);
 }
 
-void swap(t_request **a, t_request **b)
+void	heapify_up(t_dongle *d, int index, char *scheduler)
 {
-    t_request *tmp;
+	int	parent;
 
-    tmp = *a;
-    *a = *b;
-    *b = tmp;
+	while (index > 0)
+	{
+		parent = (index - 1) / 2;
+		if (compare(d->heap[index], d->heap[parent], scheduler))
+		{
+			swap(&d->heap[index], &d->heap[parent]);
+			index = parent;
+		}
+		else
+			break ;
+	}
 }
 
-void heapify_up(t_dongle *d, int index, char *scheduler)
+int	get_smallest(t_dongle *d, int index, char *scheduler)
 {
-    int parent;
+	int	left;
+	int	right;
+	int	smallest;
 
-    while (index > 0)
-    {
-        parent = (index - 1) / 2;
-        if (compare(d->heap[index], d->heap[parent], scheduler))
-        {
-            swap(&d->heap[index], &d->heap[parent]);
-            index = parent;
-        }
-        else
-            break;
-    }
-}
-static int  get_smallest(t_dongle *d, int index, char *scheduler)
-{
-    int left;
-    int right;
-    int smallest;
-
-    left = 2 * index + 1;
-    right = 2 * index + 2;
-    smallest = index;
-    if (left < d->size)
-    {
-        if (compare(d->heap[left], d->heap[smallest], scheduler))
-            smallest = left;
-    }
-    if (right < d->size)
-    {
-        if (compare(d->heap[right], d->heap[smallest], scheduler))
-            smallest = right;
-    }
-    return (smallest);
+	left = 2 * index + 1;
+	right = 2 * index + 2;
+	smallest = index;
+	if (left < d->size)
+	{
+		if (compare(d->heap[left], d->heap[smallest], scheduler))
+			smallest = left;
+	}
+	if (right < d->size)
+	{
+		if (compare(d->heap[right], d->heap[smallest], scheduler))
+			smallest = right;
+	}
+	return (smallest);
 }
 
-void    heapify_down(t_dongle *d, int index, char *scheduler)
+void	heapify_down(t_dongle *d, int index, char *scheduler)
 {
-    int smallest;
+	int	smallest;
 
-    while (1)
-    {
-        smallest = get_smallest(d, index, scheduler);
-        if (smallest == index)
-            break ;
-        swap(&d->heap[index], &d->heap[smallest]);
-        index = smallest;
-    }
+	while (1)
+	{
+		smallest = get_smallest(d, index, scheduler);
+		if (smallest == index)
+			break ;
+		swap(&d->heap[index], &d->heap[smallest]);
+		index = smallest;
+	}
 }
 
-t_request *pop_heap(t_dongle *d, char *scheduler)
+t_request	*pop_heap(t_dongle *d, char *scheduler)
 {
-    t_request *top;
+	t_request	*top;
 
-    if (d->size == 0)
-        return (NULL);
-    top = d->heap[0];
-    d->heap[0] = d->heap[d->size - 1];
-    d->size--;
-    heapify_down(d, 0, scheduler);
-    return (top);
-}
-
-int push_heap(t_dongle *d, t_request *req, char *scheduler)
-{
-    if (d->size >= d->capacity)
-        return (0);
-
-    d->heap[d->size] = req;
-    heapify_up(d, d->size, scheduler);
-    d->size++;
-    return (1);
-}
-
-void remove_request(t_dongle *d, t_request *req, char *scheduler)
-{
-    int i;
-
-    i = 0;
-    while (i < d->size)
-    {
-        if (d->heap[i] == req)
-        {
-            d->heap[i] = d->heap[d->size - 1];
-            d->size--;
-            if (i < d->size)
-            {
-                heapify_up(d, i, scheduler);
-                heapify_down(d, i, scheduler);
-            }
-            return;
-        }
-        i++;
-    }
+	if (d->size == 0)
+		return (NULL);
+	top = d->heap[0];
+	d->heap[0] = d->heap[d->size - 1];
+	d->size--;
+	heapify_down(d, 0, scheduler);
+	return (top);
 }

@@ -1,0 +1,21 @@
+./codexion 8 189 2 2 2 2 2 edf
+Nombre d args: 9
+number_of_coders: 8
+time_to_burnout: 189
+time_to_compile: 2
+time_to_debug: 2
+time_to_refactor: 2
+number_of_compiles_required: 2
+dongle_cooldown: 2
+Method used edf
+0 2 has taken a dongle
+0 2 has taken a dongle
+0 2 is compiling
+2 2 is debugging
+4 2 is refactoring
+8 2 has taken a dongle
+8 2 has taken a dongle
+8 2 is compiling
+10 2 is debugging
+12 2 is refactoring
+198 2 burned out
